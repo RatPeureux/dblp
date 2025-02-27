@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  web:
+    image: php:8.1-apache   # Utilisation de l'image PHP avec Apache
+    build:
+      context: .            # Répertoire où se trouve ton Dockerfile
+    ports:
+      - "80:80"             # Mappeer le port 80 de la machine hôte au port 80 du conteneur
+    depends_on:
+      - db                  # Le service 'web' dépend du service 'db'
+    volumes:
+      - ./:/var/www/        # Tout copier y compris au dessus de html/
+      - ./php.ini:/usr/local/etc/php/conf.d/php.ini  # Montée du fichier php.ini local dans le conteneur
+    command: /bin/bash -c "a2enmod rewrite && apache2-foreground"
+    environment:
+      - DB_HOST=db          # Adresse du service db
+      - DB_USER=root        # Utilisateur de la base de données PostgreSQL
+      - DB_PASSWORD=mdp     # Mot de passe
+      - DB_NAME=account     # Nom de la base de données PostgreSQL
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: account  # Nom de la base de données PostgreSQL
+      POSTGRES_USER: root   # Utilisateur de la base de données PostgreSQL
+      POSTGRES_PASSWORD: mdp # Mot de passe de la db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "8080:8080"
+
+volumes:
+  pgdata:
