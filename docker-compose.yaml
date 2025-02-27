@@ -17,17 +17,17 @@ services:
       - DB_HOST=db          # Adresse du service db
       - DB_USER=root        # Utilisateur de la base de données PostgreSQL
       - DB_PASSWORD=mdp     # Mot de passe
-      - DB_NAME=account     # Nom de la base de données PostgreSQL
+      - DB_NAME=postgres    # Nom de la base de données PostgreSQL
 
   db:
     image: postgres
     restart: always
     environment:
-      POSTGRES_DB: account  # Nom de la base de données PostgreSQL
-      POSTGRES_USER: root   # Utilisateur de la base de données PostgreSQL
-      POSTGRES_PASSWORD: mdp # Mot de passe de la db
+      POSTGRES_DB: postgres     # Nom de la base de données PostgreSQL
+      POSTGRES_USER: root       # Utilisateur de la base de données PostgreSQL
+      POSTGRES_PASSWORD: mdp    # Mot de passe de la db
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - pgdata_dblp:/var/lib/postgresql/data
 
   adminer:
     image: adminer
@@ -36,4 +36,5 @@ services:
       - "8080:8080"
 
 volumes:
+  pgdata_dblp:
   pgdata:
