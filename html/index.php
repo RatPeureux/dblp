@@ -1,10 +1,12 @@
 <?php
-// Connexion à la base de données
-$pdo = new PDO("postgresql:host=localhost;dbname=monde", "root", "");
 
-// Récupération des pays
-$query = $pdo->query("SELECT continent, country FROM _pays_continent");
-$pays = $query->fetchAll(PDO::FETCH_ASSOC);
+require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
+
+$stmt = $db->prepare("SELECT * FROM _ville");
+if ($stmt->execute()) {
+  $villes = $stmt->fetchAll();
+}
+
 ?>
 
 <!DOCTYPE html>
