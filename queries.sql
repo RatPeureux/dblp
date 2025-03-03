@@ -11,6 +11,11 @@ from _ville v
 join _pays_continent pc on v.country = pc.country
 group by pc.continent;
 
+-- importer les villes dans le monde depuis le csv
+copy _ville (city, city_ascii, lat, lng, country, iso2, iso3, admin_name, capital, population, id)
+from '/files/worldcities.csv'
+with (format csv, header);
+
 -- nombre maximum de villes par pays
 
 -- nombre moyen de villes par continent
@@ -22,8 +27,8 @@ order by max_pays desc
 limit 1;
 
 -- importer les pays / continents de puis csv
-copy t (x1, ... , x10)
-from '/path/to/my_file'
+copy _pays_continent (continent, country)
+from '/files/countriescontinents.csv'
 with (format csv);
 
 -- importer les villes dans le monde depuis le csv
