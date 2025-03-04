@@ -1,12 +1,15 @@
 <?php
-
 require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
 
-$stmt = $db->prepare("SELECT * FROM _ville");
-if ($stmt->execute()) {
-  $villes = $stmt->fetchAll();
-}
+$data = json_decode("https://dblp.org/search/publ/api?q=test&h=10&format=json", true);
+?>
 
+<pre>
+  <?php print_r($data); ?>
+</pre>
+
+<?php
+$hits = $data['result']['hits']['hit'];
 ?>
 
 <!DOCTYPE html>
@@ -14,25 +17,24 @@ if ($stmt->execute()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Carte Interactive</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <style>
-        #map { height: 600px; }
-    </style>
+    <title>Insertions</title>
 </head>
 <body>
-    <h1>Carte du Monde Interactive</h1>
-    <div id="map"></div>
-
-    <script>
-        // Initialisation de la carte
-        var map = L.map('map').setView([20, 0], 2);
-
-        // Ajout d'un fond de carte OpenStreetMap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-    </script>
+  <?php foreach ($hits as $hit) {
+      $id = $hit['@id'];
+      $type = $hit['info']['type'];
+      $doi = $hit['info']['doi'];
+      $title = $hit['info']['title'];
+      $venue = $hit['info']['venue'];
+      $year = $hit['info']['year'];
+      $pages = $hit['info']['pages'];
+      $ee = $hit['info']['ee'];
+      $url = $hit['info']['url'];
+      $db->query("INSERT INTO _article (id, type, doi, title, venue, year, pages, ee, url) VALUES ('$id', '$type', '$doi', '$title', '$venue', '$year', '$pages', '$ee', '$url')");
+      foreach ($hit['authors'] as $author) {
+          $pid = $author['@pid'];
+          $db->query("INSERT INTO _article_auteur (article_id, author_id) VALUES ('$id', '$pid')");
+      }
+  } ?>
 </body>
 </html>
