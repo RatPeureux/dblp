@@ -100,7 +100,7 @@ foreach($articles as $article) { ?>
     $author_name = $author_name[0]['first_name'] . ' ' . $author_name[0]['last_name'];
   }
 ?>
-  <li><?php echo $author_name ?></li>
+    <li><a href="/profil?pid=<?php echo $author['author_pid'] ?>"><?php echo $author['author_pid'] ?></a></li>
 <?php
   }
 ?>
