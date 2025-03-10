@@ -1,0 +1,12 @@
+/* STYLE GLOBAL */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+	padding: 0 2rem;
+}
+
+input {
+	border: 1px solid black;
+}
