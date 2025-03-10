@@ -7,6 +7,23 @@ body {
 	padding: 0 2rem;
 }
 
-input {
-	border: 1px solid black;
+
+td, th {
+	border: 1px black solid;
+	padding: .5rem;
 }
+
+table thead th {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  background-color: #edecec;
+}
+
+a {
+	color: blue;
+}
+a:hover {
+	text-decoration: underline;
+}
+
