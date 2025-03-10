@@ -53,16 +53,16 @@ if (isset($_GET['search'])) {
 <?php } else { ?>
 <table class='text-center'>
   <thead>
-  <tr>
-    <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Type</th>
-    <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Titre</th>
-    <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Année</th>
-    <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Auteurs</th>
-    <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Lien DBLP</th>
-    <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Lien DOI ou autre</th>
-    <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Source</th>
-    <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Pages</th>
-  </tr>
+    <tr>
+      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Type</th>
+      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Titre</th>
+      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Année</th>
+      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Auteurs</th>
+      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Lien DBLP</th>
+      <th class='sticky top-0 px-6 py-3 border border-black bg-gray' title="Digital Object on Internet">Lien DOI ou autre</th>
+      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Source</th>
+      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Pages</th>
+    </tr>
   </thead>
   <tbody>
 <?php
