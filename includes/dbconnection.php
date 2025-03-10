@@ -10,7 +10,6 @@ $port 	= '5432'; // Default port for PostgreSQL
 try {
     $db = new PDO("pgsql:host=$host;port=$port;dbname=$dbname", $user, $pass);
     $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
 } catch (PDOException $e) {
     echo "Erreur: " . $e->getMessage();
     exit;
