@@ -31,7 +31,7 @@ $hits = $data['result']['hits']['hit'];
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Insertions</title>
+    <title>R&L - ! Insertions en BDD !</title>
 </head>
 <body>
 
@@ -70,10 +70,10 @@ foreach ($hits as $hit) {
         $xml = getXmlFromUrl("https://dblp.org/pid/$pid.xml");
         if ($xml === false) {
             echo "Erreur lors du chargement de $pid.xml\n";
-            die();
+            continue;
         }
 
-        sleep(2);
+        sleep(3);
     
         $pid = (string) $xml['pid'];
         $name = (string) $xml['name'];
@@ -107,10 +107,10 @@ foreach ($hits as $hit) {
             $xml = getXmlFromUrl("https://dblp.org/pid/$pid.xml");
             if ($xml === false) {
                 echo "Erreur lors du chargement de $pid.xml\n";
-                die();
+                continue;
             }
 
-            sleep(2);
+            sleep(3);
         
             $pid = (string) $xml['pid'];
             $name = (string) $xml['name'];
