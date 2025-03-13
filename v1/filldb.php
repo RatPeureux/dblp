@@ -20,6 +20,8 @@ $err = curl_error($curl);
 curl_close($curl);
 $data = json_decode($data, true);
 
+$inconnu = 0;
+
 if ($err) {
     print_r($err);
 }
@@ -69,7 +71,8 @@ foreach ($hits as $hit) {
 
         $xml = getXmlFromUrl("https://dblp.org/pid/$pid.xml");
         if ($xml === false) {
-            echo "Erreur lors du chargement de $pid.xml\n";
+            echo "Erreur lors du chargement de $pid.xml";
+            $inconnu++;
             continue;
         }
 
@@ -106,7 +109,8 @@ foreach ($hits as $hit) {
 
             $xml = getXmlFromUrl("https://dblp.org/pid/$pid.xml");
             if ($xml === false) {
-                echo "Erreur lors du chargement de $pid.xml\n";
+                echo "Erreur lors du chargement de $pid.xml";
+                $inconnu++;
                 continue;
             }
 
@@ -140,6 +144,10 @@ foreach ($hits as $hit) {
 
 </body>
 </html>
+
+<?php 
+echo $inconnu . " auteur(s) inconnu(s) importé(s)"; 
+?>
 
 <?php
 

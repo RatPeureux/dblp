@@ -2,9 +2,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profil</title>
+    <title>R&L - Profil</title>
 
-    <link rel="stylesheet" href="/styles/style.css">
+    <link rel="stylesheet" href="/../html/styles/style.css">
 
     <!-- Nous chargeons les fichiers CDN de Leaflet. Le CSS AVANT le JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -23,18 +23,20 @@ if (isset($_GET['pid']) && preg_match('/^.+\/.+$/', $_GET['pid'])) {
   $infos_profil = require $_SERVER['DOCUMENT_ROOT'] . '/../includes/get_infos_profil.php';
 ?>
 
-  <h1 class='text-xl font-bold'><?php echo $infos_profil['first_name'] . ', ' . $infos_profil['last_name'] ?></h1>
+  <h1 class='text-3xl font-bold'><?php echo $infos_profil['first_name'] . ' ' . $infos_profil['last_name'] ?></h1>
 
-  <h1 class='font-bold'>Travaux</h1>
+  <a href="http://localhost?page=<?php echo (isset($_GET['retour'])) ? $_GET['retour'] : 1 ?>" class="text-xl">Retour à la liste des publications</a>
+
+  <h2 class='text-xl font-bold'>Affiliations</h2>
+
+  <h2 class='text-xl font-bold'>Travaux</h2>
   <ul class='list-disc!'>
     <?php foreach($infos_profil['publications'] as $publication) { ?>
     <li class='ml-10'><a href="<?php echo $publication['url'] ?>"><?php echo $publication['title'] ?></a></li>
     <?php } ?>
   </ul>
 
-  <h1 class='font-bold'>Affiliations</h1>
-
-  <h1 class='font-bold'>Carte</h1>
+  <h2 class='text-xl font-bold'>Carte</h2>
   <div id="map" class='border border-black w-[90%] self-center h-[500px]'></div>
 
 <?php
