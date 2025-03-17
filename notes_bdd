@@ -1,0 +1,10 @@
+# _publication_auteur
+	doc_id INT
+	auth_id INT
+
+# _auteur
+	auth_id INT
+
+# Organismes où a travaillé tel auteur
+https://api.archives-ouvertes.fr/search/IRISA/?fl=docid,title_s,uri_s,authIdHal_i,authLastName_s,authFirstName_s,authOrganism_s,instStructName_s,rgrpLabStructName_s,structName_s,labStructName_s
+

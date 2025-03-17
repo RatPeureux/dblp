@@ -21,6 +21,8 @@ if (isset($_GET['pid']) && preg_match('/^.+\/.+$/', $_GET['pid'])) {
   $pid = $_GET['pid'];
   // Récupérer les infos du profil
   $infos_profil = require $_SERVER['DOCUMENT_ROOT'] . '/../includes/get_infos_profil.php';
+  echo "<pre>";
+  print_r($infos_profil);
 ?>
 
   <h1 class='text-3xl font-bold'><?php echo $infos_profil['first_name'] . ' ' . $infos_profil['last_name'] ?></h1>
