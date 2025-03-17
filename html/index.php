@@ -1,137 +1,143 @@
+<?php
+
+// NOMBRE DE REQUÊTES À EFFECTUER
+const REQUESTS = 15;
+
+// NOMBRE DE RANGS PAR REQUÊTE EFFECTUÉE
+const ROWS = 1000;
+
+// TEMPS MAXIMUM D'EXÉCUTION POUR CES PARAMÈTRES : 5 MINUTES
+
+require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
+
+function requete($url)
+{
+    $curl = curl_init();
+
+    curl_setopt_array($curl, array(
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "GET",
+        CURLOPT_HTTPHEADER => [
+            "cache-control: no-cache"
+        ]
+    ));
+
+    $data = curl_exec($curl);
+    $err = curl_error($curl);
+    curl_close($curl);
+
+    if ($err) {
+        print_r($err);
+        return null;
+    }
+
+    $data = json_decode($data, true);
+
+    if (json_last_error() === JSON_ERROR_NONE && isset($data['response']['docs'])) {
+        return $data['response']['docs'];
+    } else {
+        print_r("Erreur de décodage JSON ou structure inattendue");
+        return null;
+    }
+}
+
+?>
+
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <!-- Nous chargeons les fichiers CDN de Leaflet. Le CSS AVANT le JS -->
- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin=""/>
+<html lang="fr">
 
-        <title>Carte</title>
-    </head>
-    <body>
-        <div id="map">
-      <!-- Ici s'affichera la carte -->
-  </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R&L - ! Insertions en BDD !</title>
+</head>
 
-        <!-- Fichiers Javascript -->
- <!-- Make sure you put this AFTER Leaflet's CSS -->
- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
+<body>
 
-<script>
-var map = L.map('map').setView([51.505, -0.09], 13);
+    <?php
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-maxZoom: 19,
-  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+    echo REQUESTS . " REQUÊTE(S) DE " . ROWS . " RANGS...<br><br>";
 
-var marker = L.marker([51.5, -0.09]).addTo(map);
-marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
+    $db->beginTransaction();
 
-<<<<<<< HEAD
-</script>
-    </body>
-=======
-<!--- TABLE DES ARTICLES --->
-<?php if (empty($articles)) { ?>
-  <p><b>Aucun publication trouvée pour la recherche "<?php echo htmlspecialchars($input_search); ?>"</b></p>
-<?php } else { ?>
-<table class='text-center'>
-  <thead>
-    <tr>
-      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Type</th>
-      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Titre</th>
-      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Année</th>
-      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Auteurs</th>
-      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Lien DBLP</th>
-      <th class='sticky top-0 px-6 py-3 border border-black bg-gray' title="Digital Object on Internet">Lien DOI ou autre</th>
-      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Source</th>
-      <th class='sticky top-0 px-6 py-3 border border-black bg-gray'>Pages</th>
-    </tr>
-  </thead>
-  <tbody>
-<?php
-foreach($articles as $article) { ?>
-<?php
-  // Connaitre les auteurs qui on travaillé sur cette publication
-  $stmt = $db->prepare("SELECT author_pid FROM _article_auteur WHERE article_id = :article_id");
-  $stmt->bindParam(':article_id', $article['iddblp']);
-  if ($stmt->execute()) {
-  $authors = $stmt->fetchAll();
-  }
-?>
-  <tr>
-  <td class='text-xl' title="<?php echo type_shorten($article['type']) ?>"><?php echo type_to_logo($article['type']) ?></td>
-  <td title="<?php echo $article['title'] ?>">
-    <p class='line-clamp-2'>
-    <?php echo $article['title']?>
-    </p>
-  </td>
-  <td><?php echo $article['year'] ?></td>
-  
-  <td class='text-nowrap'>
-    <ul class='text-left'>
-<?php
-  foreach($authors as $author) {
-  $stmt = $db->prepare("SELECT first_name, last_name FROM _auteur WHERE pid = :pid");
-  $stmt->bindParam(':pid', $author['author_pid']);
-  if ($stmt->execute()) {
-    $author_name = $stmt->fetchAll();
-  }
+    $db->query("DELETE FROM _affiliation");
+    $db->query("DELETE FROM _auteur");
+    $db->query("DELETE FROM _publication");
+    $db->query("DELETE FROM _publication_affiliation");
+    $db->query("DELETE FROM _publication_auteur");
 
-  if (empty($author_name)) {
-    $author_name = 'Inconnu';
-  } else {
-    $author_name = $author_name[0]['first_name'] . ' ' . $author_name[0]['last_name'];
-  }
-?>
-    <li><a href="/profil?pid=<?php echo $author['author_pid'] ?>"><?php echo $author_name ?></a></li>
-<?php
-  }
-?>
-    </ul>
-  </td>
+    $insertPublicationStmt = $db->prepare("INSERT INTO _publication (id, titre, url) VALUES (:id, :titre, :url) ON CONFLICT DO NOTHING");
+    $insertAuteurStmt = $db->prepare("INSERT INTO _auteur (id, nom, prénom) VALUES (:id, :nom, :prenom) ON CONFLICT DO NOTHING");
+    $insertPublicationAuteurStmt = $db->prepare("INSERT INTO _publication_auteur (pub_id, aut_id) VALUES (:pub_id, :aut_id) ON CONFLICT DO NOTHING");
+    $insertAffiliationStmt = $db->prepare("INSERT INTO _affiliation (nom) VALUES (:nom) ON CONFLICT (nom) DO UPDATE SET nom = EXCLUDED.nom RETURNING id");
+    $insertPublicationAffiliationStmt = $db->prepare('INSERT INTO _publication_affiliation (pub_id, aff_id) VALUES (:pub_id, :aff_id) ON CONFLICT DO NOTHING');
 
-  <td><?php echo '<a href=' . $article['url'] . ' target=_blank>' . $article['url'] . '</a>'?></td>
-  <td><?php if(isset($article['ee']) && $article['ee']) { echo '<a href=' . $article['ee'] . ' target=_blank>' . $article['ee'] . '</a>'; } else { echo 'Non spécifié'; } ?></td>
-  <td><?php echo (isset($article['venue']) && $article['venue']) ? $article['venue'] : 'Non spécifiée' ?></td>
-  <td><?php echo (isset($article['pages']) && $article['pages']) ? $article['pages'] : 'Non spécifiées' ?></td>
-  </tr>
-<?php
-  }
-?>
-  </tbody>
-</table>
-<?php } ?>
+    for ($i = 0; $i < REQUESTS; $i++) {
+        $start = $i * ROWS;
+        $results = requete("https://api.archives-ouvertes.fr/search/IRISA/?fl=docid,title_s,uri_s,authIdHal_i,authLastName_s,authFirstName_s,instStructName_s&sort=docid+asc&rows=" . ROWS . "&start=$start");
 
-<p class="text-center mt-[2rem]">
-  <?php if ($page > 1) { ?>
-    <a class="text-xl" href="http://localhost?page=1"><<&nbsp;&nbsp;</a>
-    <a class="text-xl" href="http://localhost?page=<?php echo $page-1;?>"><&nbsp;</a> 
-  <?php } ?>
-  &nbsp;
-  <?php
-  $total_pages = ceil($db->query("SELECT COUNT(*) FROM _article WHERE title LIKE '%$input_search%'")->fetchColumn() / SIZE);
-  $start = max(1, $page - 2);
-  $end = min($total_pages, $page + 2);
+        if ($results === null) {
+            continue;
+        }
 
-  for ($i = $start; $i <= $end; $i++) { 
-  if ($i == $page) { ?>
-    <strong class="text-xl"><?php echo $i;?></strong>
-  <?php } else { ?>
-    <a class="text-xl" href="http://localhost?page=<?php echo $i;?>"><?php echo $i;?></a>
-  <?php } ?>
-  &nbsp;
-  <?php } 
-  if ($page < $total_pages) { ?>
-  <a class="text-xl" href="http://localhost?page=<?php echo $page+1;?>">&nbsp;></a>
-  <a class="text-xl" href="http://localhost?page=<?php echo $total_pages;?>">&nbsp;&nbsp;>></a>
-  <?php } ?>
-</p>
+        foreach ($results as $elt) {
+            $pub_id = $elt["docid"];
+            $titre = is_array($elt["title_s"]) ? implode(", ", $elt["title_s"]) : $elt["title_s"];
+            $titre = mb_substr($titre, 0, 250, 'UTF-8') . "...";
+            $url = is_array($elt["uri_s"]) ? implode(", ", $elt["uri_s"]) : $elt["uri_s"];
+
+            $insertPublicationStmt->bindParam(':id', $pub_id);
+            $insertPublicationStmt->bindParam(':titre', $titre);
+            $insertPublicationStmt->bindParam(':url', $url);
+            $insertPublicationStmt->execute();
+
+            $auteurs = $elt["authIdHal_i"] ?? [];
+            $noms = $elt["authLastName_s"] ?? [];
+            $prenoms = $elt["authFirstName_s"] ?? [];
+
+            for ($j = 0; $j < count($auteurs); $j++) {
+                $aut_id = $auteurs[$j];
+                $nom = mb_convert_encoding($noms[$j], 'UTF-8', 'auto');
+                $prenom = mb_convert_encoding($prenoms[$j], 'UTF-8', 'auto');
+
+                $insertAuteurStmt->bindParam(':id', $aut_id);
+                $insertAuteurStmt->bindParam(':nom', $nom);
+                $insertAuteurStmt->bindParam(':prenom', $prenom);
+                $insertAuteurStmt->execute();
+
+                $insertPublicationAuteurStmt->bindParam(':pub_id', $pub_id);
+                $insertPublicationAuteurStmt->bindParam(':aut_id', $aut_id);
+                $insertPublicationAuteurStmt->execute();
+            }
+
+            $affiliations = $elt["instStructName_s"] ?? [];
+
+            foreach ($affiliations as $affiliation) {
+                $affiliation = mb_convert_encoding($affiliation, 'UTF-8', 'auto');
+
+                $insertAffiliationStmt->bindParam(':nom', $affiliation);
+                $insertAffiliationStmt->execute();
+                $aff_id = $insertAffiliationStmt->fetchColumn();
+
+                $insertPublicationAffiliationStmt->bindParam(':pub_id', $pub_id);
+                $insertPublicationAffiliationStmt->bindParam(':aff_id', $aff_id);
+                $insertPublicationAffiliationStmt->execute();
+            }
+        }
+
+        // Temps séparant les requêtes de {ROWS} rangs
+        sleep(1);
+    }
+
+    $db->commit();
+
+    echo "ÉXÉCUTION TERMINÉ";
+
+    ?>
 
 </body>
->>>>>>> 3f9f325 (merge)
+
 </html>
