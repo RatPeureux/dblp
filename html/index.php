@@ -1,36 +1,142 @@
+<?php
+// TEMPS MAXIMUM D'EXÉCUTION : 5 MINUTES
+
+// NOMBRE DE REQUÊTES À EFFECTUER
+const REQUESTS = 15;
+
+// NOMBRE DE RANGS PAR REQUÊTE EFFECTUÉE
+const ROWS = 1000;
+
+require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
+
+function requete($url)
+{
+    $curl = curl_init();
+
+    curl_setopt_array($curl, array(
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT => 10,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => "GET",
+        CURLOPT_HTTPHEADER => [
+            "cache-control: no-cache"
+        ]
+    ));
+
+    $data = curl_exec($curl);
+    $err = curl_error($curl);
+    curl_close($curl);
+
+    if ($err) {
+        print_r($err);
+        return null;
+    }
+
+    $data = json_decode($data, true);
+
+    if (json_last_error() === JSON_ERROR_NONE && isset($data['response']['docs'])) {
+        return $data['response']['docs'];
+    } else {
+        print_r("Erreur de décodage JSON ou structure inattendue");
+        return null;
+    }
+}
+
+?>
+
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <!-- Nous chargeons les fichiers CDN de Leaflet. Le CSS AVANT le JS -->
- <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-     crossorigin=""/>
+<html lang="fr">
 
-        <title>Carte</title>
-    </head>
-    <body>
-        <div id="map">
-      <!-- Ici s'affichera la carte -->
-  </div>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R&L - ! Insertions en BDD !</title>
+</head>
 
-        <!-- Fichiers Javascript -->
- <!-- Make sure you put this AFTER Leaflet's CSS -->
- <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-     crossorigin=""></script>
+<body>
 
-<script>
-var map = L.map('map').setView([51.505, -0.09], 13);
+    <?php
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-maxZoom: 19,
-  attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-}).addTo(map);
+    echo REQUESTS . " REQUÊTE(S) DE " . ROWS . " RANGS...<br><br>";
 
-var marker = L.marker([51.5, -0.09]).addTo(map);
-marker.bindPopup("<b>Hello world!</b><br>I am a popup.").openPopup();
+    $db->beginTransaction();
 
-</script>
-    </body>
+    $db->query("DELETE FROM _affiliation");
+    $db->query("DELETE FROM _auteur");
+    $db->query("DELETE FROM _publication");
+    $db->query("DELETE FROM _publication_affiliation");
+    $db->query("DELETE FROM _publication_auteur");
+
+    $insertPublicationStmt = $db->prepare("INSERT INTO _publication (id, titre, url) VALUES (:id, :titre, :url) ON CONFLICT DO NOTHING");
+    $insertAuteurStmt = $db->prepare("INSERT INTO _auteur (id, nom, prénom) VALUES (:id, :nom, :prenom) ON CONFLICT DO NOTHING");
+    $insertPublicationAuteurStmt = $db->prepare("INSERT INTO _publication_auteur (pub_id, aut_id) VALUES (:pub_id, :aut_id) ON CONFLICT DO NOTHING");
+    $insertAffiliationStmt = $db->prepare("INSERT INTO _affiliation (nom) VALUES (:nom) ON CONFLICT (nom) DO UPDATE SET nom = EXCLUDED.nom RETURNING id");
+    $insertPublicationAffiliationStmt = $db->prepare('INSERT INTO _publication_affiliation (pub_id, aff_id) VALUES (:pub_id, :aff_id) ON CONFLICT DO NOTHING');
+
+    for ($i = 0; $i < REQUESTS; $i++) {
+        $start = $i * ROWS;
+        $results = requete("https://api.archives-ouvertes.fr/search/IRISA/?fl=docid,title_s,uri_s,authIdHal_i,authLastName_s,authFirstName_s,instStructName_s&sort=docid+asc&rows=" . ROWS . "&start=$start");
+
+        if ($results === null) {
+            continue;
+        }
+
+        foreach ($results as $elt) {
+            $pub_id = $elt["docid"];
+            $titre = is_array($elt["title_s"]) ? implode(", ", $elt["title_s"]) : $elt["title_s"];
+            $titre = mb_substr($titre, 0, 250, 'UTF-8') . "...";
+            $url = is_array($elt["uri_s"]) ? implode(", ", $elt["uri_s"]) : $elt["uri_s"];
+
+            $insertPublicationStmt->bindParam(':id', $pub_id);
+            $insertPublicationStmt->bindParam(':titre', $titre);
+            $insertPublicationStmt->bindParam(':url', $url);
+            $insertPublicationStmt->execute();
+
+            $auteurs = $elt["authIdHal_i"] ?? [];
+            $noms = $elt["authLastName_s"] ?? [];
+            $prenoms = $elt["authFirstName_s"] ?? [];
+
+            for ($j = 0; $j < count($auteurs); $j++) {
+                $aut_id = $auteurs[$j];
+                $nom = mb_convert_encoding($noms[$j], 'UTF-8', 'auto');
+                $prenom = mb_convert_encoding($prenoms[$j], 'UTF-8', 'auto');
+
+                $insertAuteurStmt->bindParam(':id', $aut_id);
+                $insertAuteurStmt->bindParam(':nom', $nom);
+                $insertAuteurStmt->bindParam(':prenom', $prenom);
+                $insertAuteurStmt->execute();
+
+                $insertPublicationAuteurStmt->bindParam(':pub_id', $pub_id);
+                $insertPublicationAuteurStmt->bindParam(':aut_id', $aut_id);
+                $insertPublicationAuteurStmt->execute();
+            }
+
+            $affiliations = $elt["instStructName_s"] ?? [];
+
+            foreach ($affiliations as $affiliation) {
+                $affiliation = mb_convert_encoding($affiliation, 'UTF-8', 'auto');
+
+                $insertAffiliationStmt->bindParam(':nom', $affiliation);
+                $insertAffiliationStmt->execute();
+                $aff_id = $insertAffiliationStmt->fetchColumn();
+
+                $insertPublicationAffiliationStmt->bindParam(':pub_id', $pub_id);
+                $insertPublicationAffiliationStmt->bindParam(':aff_id', $aff_id);
+                $insertPublicationAffiliationStmt->execute();
+            }
+        }
+
+        // Temps séparant les requêtes de {ROWS} rangs
+        sleep(1);
+    }
+
+    $db->commit();
+
+    echo "ÉXÉCUTION TERMINÉ";
+
+    ?>
+
+</body>
+
 </html>
