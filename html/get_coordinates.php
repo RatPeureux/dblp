@@ -32,7 +32,7 @@ for ($i = 0; $i < 1000; $i++) {
 
     // Vérifier s'il y a des résultats
     if (isset($data[0])) {
-        // Récupérer la latitude et la longitude
+        // Récupérer la latitude et la lonitude
         $latitude = $data[0]->lat;
         $longitude = $data[0]->lon;
 
@@ -42,7 +42,7 @@ for ($i = 0; $i < 1000; $i++) {
         $stmt->bindParam(":lon", $longitude);
         $stmt->execute();
 
-        echo $i . ' donc ' . $latitude . ';' . $longitude . '<br>';
+        echo $i . ' donc ' . $latitude . ';' . $lonitude . '<br>';
     } else {
         $stmt = $db->prepare("DELETE FROM _affiliation WHERE id = :id");
         $stmt->bindParam(":id", $affiliations[$i]['id']);
