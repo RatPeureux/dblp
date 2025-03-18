@@ -1,7 +1,7 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
 
-$stmt = $db->prepare("SELECT * FROM _affiliation WHERE lat IS NOT NULL AND long IS NOT NULL");
+$stmt = $db->prepare("SELECT * FROM _affiliation WHERE lat IS NOT NULL AND lon IS NOT NULL");
 if ($stmt->execute()) {
     $affiliations = $stmt->fetchAll();
 }
@@ -46,19 +46,24 @@ if ($stmt->execute()) {
         // Create a marker cluster group
         var markers = L.markerClusterGroup();
 
-        let irisa_co = [[48.72959, -3.4625469956446002], [48.11638175, -1.6396373314130999], [47.644607, -2.7489126544117584]];
+        // 
+        let irisa_co = [
+            ['Lannion', [48.72959, -3.4625469956446002]],
+            ['Rennes', [48.11638175, -1.6396373314130999]],
+            ['Vannes', [47.644607, -2.7489126544117584]]
+        ];
 
         // Ajouter les coordonnées de l'IRISA SUR LA MAP
-        for (co of irisa_co) {
-            var redIcon = new L.Icon({
-                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                iconSize: [25, 41],
-                iconAnchor: [12, 41],
-                popupAnchor: [1, -34],
-                shadowSize: [41, 41]
-            });
+        var redIcon = new L.Icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
 
-            L.marker(co, { icon: redIcon }).addTo(map).bindPopup('IRISA');
+        for (co of irisa_co) {
+            L.marker(co[1], { icon: redIcon }).addTo(map).bindPopup("IRISA : " + co[0]);
         }
 
         L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
