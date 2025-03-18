@@ -3,7 +3,7 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/functions.php';
 
 // NOMBRE DE PUBLICATIONS PAR PAGE
-const LIGNES = 13;
+const LIGNES = 99;
 
 $page = $_GET["page"] ?? 0;
 
@@ -155,7 +155,7 @@ if ($page > 0) {
 
   <?php
   // NOMBRE DE PAGES PRÉCEDENTES / SUIVANTES DIRECTEMENT ACCESSIBLES
-  const P = 2;
+  const P = 3;
   ?>
 
   <p class='text-center mt-[2rem]'>
@@ -165,8 +165,8 @@ if ($page > 0) {
       </a>
       &nbsp;
       &nbsp;
-      <a class='text-xl text-blue-600' href='http://localhost?page=<?php echo $page-1; ?>'>
-        <
+      <a title="-10" class='text-xl text-blue-600' href='http://localhost?page=<?php echo $page-10; ?>'>
+        <<
       </a>
       &nbsp;
       &nbsp;
@@ -196,8 +196,8 @@ if ($page > 0) {
       ...
       &nbsp;
       &nbsp;
-      <a class='text-xl text-blue-600' href='http://localhost?page=<?php echo $page+1; ?>'>
-        >
+      <a title="+10" class='text-xl text-blue-600' href='http://localhost?page=<?php echo $page+10; ?>'>
+        >>
       </a>
       &nbsp;
       &nbsp;
