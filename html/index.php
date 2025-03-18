@@ -3,23 +3,18 @@ require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/functions.php';
 
 // NOMBRE DE PUBLICATIONS PAR PAGE
-const SIZE = 50;
+const LIGNES = 13;
 
-if (isset($_GET["page"])) {
-  $page = $_GET["page"];
-} else {
-  $page = 1;
-}
+$page = $_GET["page"] ?? 0;
 
-$input_search = (isset($_GET['search']) && $_GET['search']) ? $_GET['search'] : '';
-
-// Récupérer les publications et filtrer sur la rechercher
-$stmt = $db->prepare("SELECT * FROM _publication WHERE titre LIKE :search OFFSET :offset LIMIT :limite");
-if ($stmt->execute([':search' => '%' . $input_search . '%', ':offset' => ($page - 1) * SIZE, ':limite' => SIZE])) {
-  $publications = $stmt->fetchAll();
+if ($page > 0) {
+  // Récupérer les publications
+  $stmt = $db->prepare("SELECT * FROM _publication OFFSET :offset LIMIT :limite");
+  if ($stmt->execute([":offset" => ($page - 1) * LIGNES, ":limite" => LIGNES])) {
+    $publications = $stmt->fetchAll();
+  }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -28,34 +23,74 @@ if ($stmt->execute([':search' => '%' . $input_search . '%', ':offset' => ($page 
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>R&L - Publications</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>    
+  
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.1/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.1/dist/MarkerCluster.Default.css" />
 </head>
 
 <body class='p-[2rem] mx-auto w-[80%]'>
 
-  <h1 class='text-3xl font-bold'>Toutes les publications</h1>
+  <?php if ($page == 0) { ?>
+  <h1 class='text-3xl font-bold mb-8'>Cartes des affiliations</h1>
 
-  <form action="/" method="get" class='my-6'>
-    <input class='border border-black' id="search" name="search" type="text">
-    <input class='p-1 border border-black cursor-pointer bg-[#ddf]' type="submit" value="Rechercher par titre">
-  </form>
+  <div id="map" class="h-[75vh]"></div>
 
-  <?php
-  if (isset($_GET['search'])) {
-    echo '<a href="http://localhost" class="text-xl">Retour à la liste complète</a>';
-  }
-  ?>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-  <!--- TABLEAU DES PUBLICATIONS --->
-  <?php if (empty($publications)) { ?>
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.1/dist/leaflet.markercluster.js"></script>
+
+  <script>
+      var map = L.map('map').setView([48, 0], 8);
+
+      var markers = L.markerClusterGroup();
+
+      let irisa_co = [[48.72959, -3.4625469956446002], [48.11638175, -1.6396373314130999], [47.644607, -2.7489126544117584]];
+
+      for (co of irisa_co) {
+          var redIcon = new L.Icon({
+              iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+              iconSize: [25, 41],
+              iconAnchor: [12, 41],
+              popupAnchor: [1, -34],
+              shadowSize: [41, 41]
+          });
+
+          L.marker(co, { icon: redIcon }).addTo(map).bindPopup('IRISA');
+      }
+
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+      }).addTo(map);
+
+      <?php
+      $stmt = $db->prepare("SELECT * FROM _affiliation WHERE lat IS NOT NULL AND lon IS NOT NULL");
+      if ($stmt->execute()) {
+        $affiliations = $stmt->fetchAll();
+      }
+
+      foreach ($affiliations as $affiliation) { ?>
+          var marker = L.marker([<?php echo $affiliation['lat'] . ',' . $affiliation['lon']; ?>])
+              .bindPopup("<?php echo $affiliation['nom']; ?>");
+          markers.addLayer(marker);
+      <?php } ?>
+
+      map.addLayer(markers);
+  </script>
+  <?php } elseif (empty($publications)) { ?>
   <p>
-    <b>Aucun publication trouvée pour la recherche "<?php echo htmlspecialchars($input_search); ?>"
-    </b>
+    <b>Aucun publication trouvée...</b>
   </p>
   <?php } else { ?>
+  <h1 class='text-3xl font-bold mb-8'>Toutes les publications</h1>
+
   <table class="w-full">
-    <thead class="border border-black">
+    <thead>
       <tr>
+        <th class='sticky top-0 px-6 py-3 border border-black bg-[#ddf]'>Type</th>
         <th class='sticky top-0 px-6 py-3 border border-black bg-[#ddf]'>Titre</th>
         <th class='sticky top-0 px-6 py-3 border border-black bg-[#ddf]'>Auteurs</th>
         <th class='sticky top-0 px-6 py-3 border border-black bg-[#ddf]'>Lien HAL</th>
@@ -73,7 +108,14 @@ if ($stmt->execute([':search' => '%' . $input_search . '%', ':offset' => ($page 
       }
       ?>
       <tr>
-        <td class='p-1 border border-black" title="<?php echo htmlspecialchars($publication['titre']); ?>'>
+        <td class='p-1 border border-black'>
+          <?php
+          $types = json_decode(file_get_contents($_SERVER['DOCUMENT_ROOT'] . '/../types.json'), true);
+          echo $types[$publication['type']] ?? $publication['type'];
+          ?>
+        </td>
+
+        <td class='p-1 border border-black' title="<?php echo htmlspecialchars($publication['titre']); ?>">
           <p class='line-clamp-2'>
             <?php echo $publication['titre'] ?>
           </p>
@@ -111,14 +153,19 @@ if ($stmt->execute([':search' => '%' . $input_search . '%', ':offset' => ($page 
   </table>
   <?php } ?>
 
+  <?php
+  // NOMBRE DE PAGES PRÉCEDENTES / SUIVANTES DIRECTEMENT ACCESSIBLES
+  const P = 2;
+  ?>
+
   <p class='text-center mt-[2rem]'>
-    <?php if ($page > 1) { ?>
-      <a class='text-xl text-blue-600' href='http://localhost?page=1'>
+    <?php if ($page > P) { ?>
+      <a class='text-xl text-blue-600' href='http://localhost?page=0'>
         0
       </a>
       &nbsp;
       &nbsp;
-      <a class='text-xl text-blue-600' href='http://localhost?page=<?php echo $page - 1; ?>'>
+      <a class='text-xl text-blue-600' href='http://localhost?page=<?php echo $page-1; ?>'>
         <
       </a>
       &nbsp;
@@ -127,10 +174,10 @@ if ($stmt->execute([':search' => '%' . $input_search . '%', ':offset' => ($page 
       &nbsp;
     <?php }
 
-    $total = ceil($db->query("SELECT COUNT(*) FROM _publication WHERE titre LIKE '%$input_search%'")->fetchColumn() / SIZE);
+    $total = ceil(($db->query("SELECT COUNT(*) FROM _publication")->fetchColumn() - 1) / LIGNES);
 
-    $debut = max(1, $page - 2);
-    $fin = min($total, $page + 2);
+    $debut = max(0, $page - P);
+    $fin = min($total, $page + P);
 
     for ($i = $debut; $i <= $fin; $i++) {
       if ($i == $page) { ?>
@@ -144,13 +191,12 @@ if ($stmt->execute([':search' => '%' . $input_search . '%', ':offset' => ($page 
       <?php } ?>
     <?php } ?>
 
-
-    <?php if ($page < $total) { ?>
+    <?php if ($page < $total-P) { ?>
       &nbsp;
       ...
       &nbsp;
       &nbsp;
-      <a class='text-xl text-blue-600' href='http://localhost?page=<?php echo $page + 1; ?>'>
+      <a class='text-xl text-blue-600' href='http://localhost?page=<?php echo $page+1; ?>'>
         >
       </a>
       &nbsp;

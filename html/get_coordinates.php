@@ -1,7 +1,7 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
 
-$stmt = $db->prepare("SELECT * FROM _affiliation WHERE lat IS NULL AND long IS NULL");
+$stmt = $db->prepare("SELECT * FROM _affiliation WHERE lat IS NULL AND lon IS NULL");
 if ($stmt->execute()) {
     $affiliations = $stmt->fetchAll();
 }
@@ -32,17 +32,17 @@ for ($i = 0; $i < 1000; $i++) {
 
     // Vérifier s'il y a des résultats
     if (isset($data[0])) {
-        // Récupérer la latitude et la longitude
+        // Récupérer la latitude et la lonitude
         $latitude = $data[0]->lat;
-        $longitude = $data[0]->lon;
+        $lonitude = $data[0]->lon;
 
-        $stmt = $db->prepare("UPDATE _affiliation SET lat = :lat, long = :long WHERE id = :id");
+        $stmt = $db->prepare("UPDATE _affiliation SET lat = :lat, lon = :lon WHERE id = :id");
         $stmt->bindParam(":id", $affiliations[$i]['id']);
         $stmt->bindParam(":lat", $latitude);
-        $stmt->bindParam(":long", $longitude);
+        $stmt->bindParam(":lon", $lonitude);
         $stmt->execute();
 
-        echo $i . ' donc ' . $latitude . ';' . $longitude . '<br>';
+        echo $i . ' donc ' . $latitude . ';' . $lonitude . '<br>';
     } else {
         $stmt = $db->prepare("DELETE FROM _affiliation WHERE id = :id");
         $stmt->bindParam(":id", $affiliations[$i]['id']);
