@@ -125,14 +125,11 @@ function requete($url)
                 $insertPublicationAffiliationStmt->execute();
             }
         }
-
-        // Temps séparant les requêtes de {ROWS} rangs
-        sleep(1);
     }
 
     $db->commit();
 
-    echo "ÉXÉCUTION TERMINÉ";
+    echo "ÉXÉCUTION TERMINÉE";
 
     ?>
 
