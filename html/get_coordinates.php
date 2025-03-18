@@ -1,7 +1,7 @@
 <?php
 require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
 
-$stmt = $db->prepare("SELECT * FROM _affiliation WHERE lat IS NULL AND long IS NULL");
+$stmt = $db->prepare("SELECT * FROM _affiliation WHERE lat IS NULL AND lon IS NULL");
 if ($stmt->execute()) {
     $affiliations = $stmt->fetchAll();
 }
@@ -36,10 +36,10 @@ for ($i = 0; $i < 1000; $i++) {
         $latitude = $data[0]->lat;
         $longitude = $data[0]->lon;
 
-        $stmt = $db->prepare("UPDATE _affiliation SET lat = :lat, long = :long WHERE id = :id");
+        $stmt = $db->prepare("UPDATE _affiliation SET lat = :lat, lon = :lon WHERE id = :id");
         $stmt->bindParam(":id", $affiliations[$i]['id']);
         $stmt->bindParam(":lat", $latitude);
-        $stmt->bindParam(":long", $longitude);
+        $stmt->bindParam(":lon", $longitude);
         $stmt->execute();
 
         echo $i . ' donc ' . $latitude . ';' . $longitude . '<br>';
