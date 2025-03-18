@@ -2,6 +2,7 @@
 require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
 require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/functions.php';
 
+// NOMBRE DE PUBLICATIONS PAR PAGE
 const SIZE = 50;
 
 if (isset($_GET["page"])) {
