@@ -7,10 +7,6 @@ body {
 				padding: 0 2rem;
 }
 
-#map{ /* la carte DOIT avoir une hauteur sinon elle n'apparaît pas */
-				height:400px;
-}
-
 td, th {
 				border: 1px black solid;
 				padding: .5rem;
