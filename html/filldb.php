@@ -81,7 +81,7 @@ function requete($url)
             $pub_id = $elt["docid"];
             $titre = is_array($elt["title_s"]) ? implode(", ", $elt["title_s"]) : $elt["title_s"];
             if (strlen($titre) > 255) {
-                $titre = mb_substr($titre,0,255,"UTF-8") . "...";
+                $titre = mb_substr($titre,0,250,"UTF-8") . "...";
             }
             $url = is_array($elt["uri_s"]) ? implode(", ", $elt["uri_s"]) : $elt["uri_s"];
             $type = is_array($elt["docType_s"]) ? implode(", ", $elt["docType_s"]) : $elt["docType_s"];
