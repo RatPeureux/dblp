@@ -20,7 +20,7 @@ COPY ./html /var/www/html
 
 # Installation des dépendances de composer
 WORKDIR /var/www
-RUN composer install
+# RUN composer install
 
 # Donner certains droits pour uploader des images notamment
 # RUN chown -R www-data:www-data /var/www/html/public
