@@ -1,4 +1,6 @@
 <?php
+// CE SCRIPT PERMET D'ATTRIBUER DES COORONNÉES AUX AFFILIATIONS POUR
+// LES AFFICHER SUR LA CARTE. SINON LA CARTE RESSTE VIDE.
 require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
 
 $limit = 100;
@@ -48,8 +50,6 @@ do {
                 $stmt->bindParam(":lat", $latitude);
                 $stmt->bindParam(":lon", $longitude);
                 $stmt->execute();
-
-                echo "{$i} donc {$latitude};{$longitude}<br>";
             } else {
                 $stmt = $db->prepare("DELETE FROM _affiliation WHERE id = :id");
                 $stmt->bindParam(":id", $affiliations[$i]['aff_id']);

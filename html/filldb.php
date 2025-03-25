@@ -1,12 +1,15 @@
 <?php
+// CONNEXION A LA BDD
+require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
+
+// LE TEMPS D'EXÉCUTION DÉPEND DU NOMBRE DE REQUÊTES
+// ET DU NOMBRE DE RANGS
+
 // NOMBRE DE REQUÊTES À EFFECTUER
 const REQUESTS = 15;
 
 // NOMBRE DE RANGS PAR REQUÊTE EFFECTUÉE
 const ROWS = 1000;
-
-// TEMPS MAXIMUM D'EXÉCUTION POUR CES PARAMÈTRES : 5 MINUTES
-require_once $_SERVER['DOCUMENT_ROOT'] . '/../includes/dbconnection.php';
 
 function requete($url)
 {
