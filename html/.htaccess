@@ -1,9 +1,10 @@
-# Cacher l'extension PHP
 RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
+
+# Cacher l'extension .php
+RewriteCond %{REQUEST_FILENAME}.php -f
 RewriteRule ^([^\.]+)$ $1.php [NC,L]
 
-# Utiliser une même page pour afficher le profil d'un chercheur
-Options -Indexes
-RewriteRule ^profil/(^.+/.+$)$ profil.php?pid=$1 [L,QSA]
-
+# Réécrire l'URL pour masquer le paramètre page (ne fonctionne pas ?)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^page/([0-9]+)$ index.php?page=$1 [QSA,L]

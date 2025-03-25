@@ -67,7 +67,7 @@ function requete($url)
     $db->query("DELETE FROM _publication_affiliation");
     $db->query("DELETE FROM _publication_auteur");
 
-    $insertPublicationStmt = $db->prepare("INSERT INTO _publication (id, titre, url, type) VALUES (:id, :titre, :url, :type) ON CONFLICT DO NOTHING");
+    $insertPublicationStmt = $db->prepare("INSERT INTO _publication (id, titre, url, type, annee) VALUES (:id, :titre, :url, :type, :annee) ON CONFLICT DO NOTHING");
     $insertAuteurStmt = $db->prepare("INSERT INTO _auteur (id, nom, prénom) VALUES (:id, :nom, :prenom) ON CONFLICT DO NOTHING");
     $insertPublicationAuteurStmt = $db->prepare("INSERT INTO _publication_auteur (pub_id, aut_id) VALUES (:pub_id, :aut_id) ON CONFLICT DO NOTHING");
     $insertAffiliationStmt = $db->prepare("INSERT INTO _affiliation (nom) VALUES (:nom) ON CONFLICT (nom) DO UPDATE SET nom = EXCLUDED.nom RETURNING id");
@@ -75,7 +75,7 @@ function requete($url)
 
     for ($i = 0; $i < REQUESTS; $i++) {
         $start = $i * ROWS;
-        $results = requete("https://api.archives-ouvertes.fr/search/IRISA/?fl=docid,title_s,uri_s,docType_s,authIdHal_i,authLastName_s,authFirstName_s,instStructName_s&sort=docid+asc&rows=" . ROWS . "&start=$start");
+        $results = requete("https://api.archives-ouvertes.fr/search/IRISA/?fl=docid,title_s,uri_s,docType_s,producedDateY_i,authIdHal_i,authLastName_s,authFirstName_s,instStructName_s&sort=producedDateY_i+desc&rows=" . ROWS . "&start=$start");
 
         foreach ($results as $elt) {
             $pub_id = $elt["docid"];
@@ -85,11 +85,13 @@ function requete($url)
             }
             $url = is_array($elt["uri_s"]) ? implode(", ", $elt["uri_s"]) : $elt["uri_s"];
             $type = is_array($elt["docType_s"]) ? implode(", ", $elt["docType_s"]) : $elt["docType_s"];
+            $annee = is_array($elt["producedDateY_i"]) ? implode(", ", $elt["producedDateY_i"]) : $elt["producedDateY_i"];
 
             $insertPublicationStmt->bindParam(':id', $pub_id);
             $insertPublicationStmt->bindParam(':titre', $titre);
             $insertPublicationStmt->bindParam(':url', $url);
             $insertPublicationStmt->bindParam(':type', $type);
+            $insertPublicationStmt->bindParam(':annee', $annee);
             $insertPublicationStmt->execute();
 
             $auteurs = $elt["authIdHal_i"] ?? [];
@@ -125,6 +127,9 @@ function requete($url)
                 $insertPublicationAffiliationStmt->execute();
             }
         }
+
+        // Temps séparant les blocs de ROWS requêtes
+        sleep(2);
     }
 
     $db->commit();
