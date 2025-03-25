@@ -10,7 +10,7 @@ Ouvrez un terminal à l'endroit souhaité.
 ```cd dblp```
 
 3. Lancer la base de données localement (docker)
-```docker-compose up -d```
+```docker-compose up -d --build```
 Deux ports vont se créer : 
 - http://localhost:8080 (la base de données)
 - http://localhost (l'application)
